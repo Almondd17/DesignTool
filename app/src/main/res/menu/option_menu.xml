@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title=""
+        android:id="@+id/pencil"
+        android:icon="@drawable/pencil_icon"/>
+    <item android:title=""
+        android:id="@+id/brush"
+        android:icon="@drawable/brush_icon"/>
+    <item android:title=""
+        android:id="@+id/circle"
+        android:icon="@drawable/circle_icon"/>
+    <item android:title=""
+        android:id="@+id/rectangle"
+        android:icon="@drawable/rectangle_icon"/>
+    <item android:title=""
+        android:id="@+id/line"
+        android:icon="@drawable/line_icon"/>
+</menu>
