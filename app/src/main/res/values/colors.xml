@@ -2,6 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="hoverColor">#fb82ff</color>
+    <color name="lightpink">#fb82ff</color>
+    <color name="lightblue">#82E6FF</color>
+    <color name="transparent">#0082E6FF</color>
+    <color name="cream">#FCFFED</color>
 
 </resources>
