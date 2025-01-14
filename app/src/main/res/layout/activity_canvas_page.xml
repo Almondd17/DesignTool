@@ -15,7 +15,8 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.0"
+        android:background="@color/white"/>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/optionMenu"
@@ -28,6 +29,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/DrawView"
         app:layout_constraintVertical_bias="0.0"
-        app:menu="@menu/option_menu" />
+        app:menu="@menu/option_menu"
+        app:itemActiveIndicatorStyle="@style/Widget.MaterialComponents.BottomNavigationView.Colored"/>
+
+    <ImageButton
+        android:id="@+id/menuBtn"
+        android:layout_width="30dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/menu_icon"
+        android:elevation="10dp"
+        app:layout_constraintBottom_toBottomOf="@+id/optionMenu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

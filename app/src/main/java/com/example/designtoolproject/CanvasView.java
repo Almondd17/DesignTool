@@ -1,119 +1,229 @@
-package com.example.designtoolproject;
+    package com.example.designtoolproject;
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
-import android.view.View;
+    import android.content.Context;
+    import android.graphics.*;
+    import android.util.AttributeSet;
+    import android.view.MotionEvent;
+    import android.view.View;
+    import java.util.ArrayList;
+    import java.util.List;
 
-public class CanvasView extends View {
-    private Paint paint;
-    private Path path;
-    private float startX, startY, currentX, currentY, radius;
-    private String drawingMode;
+    //abstract shape (monitor all shapes)
+    abstract class Shape {
+        protected Paint paint;
 
-    public CanvasView(Context context) {
-        super(context);
-        init();
+        public Shape(Paint paint) {
+            this.paint = paint;
+        }
+
+        public abstract void draw(Canvas canvas);
+
+        public abstract void update(float x, float y);
     }
 
-    public CanvasView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
+    //circle shape
+    class Circle extends Shape {
 
-    public void setMode(String mode) {
-        this.drawingMode = mode;
-    }
+        private float centerX, centerY, radius;
 
-    public String getMode() {
-        return this.drawingMode;
-    }
+        public Circle(float startX, float startY, Paint paint) {
+            super(paint);
+            this.centerX = startX;
+            this.centerY = startY;
+            this.radius = 0;
+        }
 
-    public void init() {
-        paint = new Paint();
-        paint.setColor(0xFF000000); // Blue color
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(5f);
-        setMode("pencil");
-    }
+        @Override
+        public void draw(Canvas canvas) {
+            if (radius > 0) {
+                canvas.drawCircle(centerX, centerY, radius, paint);
+            }
+        }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        canvas.drawColor(0xFFFFFFFF); // White background
-
-        switch (drawingMode) {
-            case "circle":
-                if (radius > 0) {
-                    canvas.drawCircle(startX, startY, radius, paint);//Draw a circle
-                }
-                break;
-            case "rectangle":
-                canvas.drawRect(startX, startY, currentX, currentY, paint);//Draw a rectangle
-                break;
-            case "line":
-                canvas.drawLine(startX, startY, currentX, currentY, paint);//Draw a line
-                break;
-            case "pencil":
-                if (path != null) {
-                    canvas.drawPath(path, paint);
-                }
-                break;
-            case "brush":
-                Paint brushPaint = new Paint(paint);
-                brushPaint.setStrokeWidth(15f);
-                if (path != null) {
-                    canvas.drawPath(path, brushPaint);
-                }
-                break;
+        @Override
+        public void update(float x, float y) {
+            float dx = x - centerX;
+            float dy = y - centerY;
+            this.radius = (float) Math.sqrt(dx * dx + dy * dy);//calc radius (distance formula :)
         }
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                startX = event.getX();
-                startY = event.getY();
-                if ("pencil".equals(drawingMode) || "brush".equals(drawingMode)) {
-                    path = new Path();
-                    path.moveTo(startX, startY);
-                }
-                break;
+    //rectangle shape
+    class Rectangle extends Shape {
 
-            case MotionEvent.ACTION_MOVE:
-                currentX = event.getX();
-                currentY = event.getY();
+        private float startX, startY, endX, endY;
 
-                if ("circle".equals(drawingMode)) {
-                    float dx = currentX - startX;
-                    float dy = currentY - startY;
-                    radius = (float) Math.sqrt(dx * dx + dy * dy);
-                }
-                else if ("rectangle".equals(drawingMode) || "line".equals(drawingMode)) {
-                    invalidate();
-                }
-                else if ("pencil".equals(drawingMode) || "brush".equals(drawingMode)) {
-                    if (path != null) {
-                        path.lineTo(currentX, currentY);
-                    }
-                }
-                break;
-
-            case MotionEvent.ACTION_UP:
-                if ("pencil".equals(drawingMode) || "brush".equals(drawingMode)) {
-                    if (path != null) {
-                        path.lineTo(event.getX(), event.getY());
-                    }
-                }
-                break;
+        public Rectangle(float startX, float startY, Paint paint) {
+            super(paint);
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = startX;
+            this.endY = startY;
         }
 
-        invalidate();
-        return true;
+        @Override
+        public void draw(Canvas canvas) {
+            canvas.drawRect(startX, startY, endX, endY, paint);
+        }
+
+        @Override
+        public void update(float x, float y) {
+            this.endX = x;
+            this.endY = y;
+        }
     }
 
-}
+    //line shape
+    class Line extends Shape {
+
+        private float startX, startY, endX, endY;
+
+        public Line(float startX, float startY, Paint paint) {
+            super(paint);
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = startX;
+            this.endY = startY;
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            canvas.drawLine(startX, startY, endX, endY, paint);
+        }
+
+        @Override
+        public void update(float x, float y) {
+            this.endX = x;
+            this.endY = y;
+        }
+    }
+
+    //free draw (pencil)
+    class PathShape extends Shape {
+
+        private Path path;
+
+        public PathShape(Paint paint) {
+            super(paint);
+            this.path = new Path();
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            canvas.drawPath(path, paint);
+        }
+
+        @Override
+        public void update(float x, float y) {
+            path.lineTo(x, y);
+        }
+
+        public void start(float x, float y) {
+            path.moveTo(x, y);
+        }
+    }
+
+    //canvas view class (the canvas)
+    public class CanvasView extends View {
+        private Paint paint;
+        private Bitmap bitmap;
+        private Canvas bitmapCanvas;
+        private String drawingMode;
+        private Shape currentShape;
+        private List<Shape> shapes;
+
+        public CanvasView(Context context) {
+            super(context);
+            init();
+        }
+
+        public CanvasView(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            init();
+        }
+
+        private void init() {
+            paint = new Paint();
+            paint.setColor(0xFF000000);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(5f);
+            drawingMode = "pencil";
+            shapes = new ArrayList<>();
+        }
+
+        public void setMode(String mode) {
+            this.drawingMode = mode;
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            bitmapCanvas = new Canvas(bitmap);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+
+            //draw bitmap
+            canvas.drawBitmap(bitmap, 0, 0, null);
+
+            //draw each shapes
+            for (Shape shape : shapes) {
+                shape.draw(canvas);
+            }
+
+            //draw current shape
+            if (currentShape != null) {
+                currentShape.draw(canvas);
+            }
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            float x = event.getX();
+            float y = event.getY();
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    currentShape = createShape(x, y);
+                    if (currentShape instanceof PathShape) {
+                        ((PathShape) currentShape).start(x, y);
+                    }
+                    break;
+
+                case MotionEvent.ACTION_MOVE:
+                    if (currentShape != null) {
+                        currentShape.update(x, y);
+                    }
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                    if (currentShape != null) {
+                        currentShape.draw(bitmapCanvas);
+                        shapes.add(currentShape);
+                        currentShape = null;
+                    }
+                    break;
+            }
+
+            invalidate();
+            return true;
+        }
+
+        private Shape createShape(float x, float y) {
+            switch (drawingMode) {
+                case "circle":
+                    return new Circle(x, y, paint);
+                case "rectangle":
+                    return new Rectangle(x, y, paint);
+                case "line":
+                    return new Line(x, y, paint);
+                case "pencil":
+                    return new PathShape(paint);
+                default:
+                    throw new IllegalArgumentException("Unknown drawing mode: " + drawingMode);
+            }
+        }
+    }
