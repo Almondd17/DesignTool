@@ -23,11 +23,9 @@ private CanvasView canvasView;
         canvasView = findViewById(R.id.DrawView);
         optionMenu = findViewById(R.id.optionMenu);
 
-        //set selected menu item listeners and change selected drawing mode
         optionMenu.setOnItemSelectedListener(item -> {
             Map<Integer, String> idModeMap = new HashMap<>();
             idModeMap.put(R.id.pencil, "pencil");
-            idModeMap.put(R.id.brush, "brush");
             idModeMap.put(R.id.circle, "circle");
             idModeMap.put(R.id.rectangle, "rectangle");
             idModeMap.put(R.id.line, "line");

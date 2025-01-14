@@ -2,9 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:title=""
         android:id="@+id/pencil"
-        android:icon="@drawable/pencil_icon"/>
-    <item android:title=""
-        android:id="@+id/brush"
         android:icon="@drawable/brush_icon"/>
     <item android:title=""
         android:id="@+id/circle"
@@ -15,4 +12,7 @@
     <item android:title=""
         android:id="@+id/line"
         android:icon="@drawable/line_icon"/>
+    <item android:title=""
+        android:id="@+id/emptyItem"
+       />
 </menu>
