@@ -12,7 +12,4 @@
     <item android:title=""
         android:id="@+id/line"
         android:icon="@drawable/line_icon"/>
-    <item android:title=""
-        android:id="@+id/emptyItem"
-       />
 </menu>
