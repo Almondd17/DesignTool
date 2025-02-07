@@ -1,64 +1,102 @@
 package com.example.designtoolproject;
 
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link SettingsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
 public class SettingsFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     public SettingsFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment SettingsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static SettingsFragment newInstance(String param1, String param2) {
-        SettingsFragment fragment = new SettingsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_settings, container, false);
+        View v = inflater.inflate(R.layout.fragment_settings, container, false);
+        RecyclerView recyclerView = v.findViewById(R.id.settingsRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        List<SettingItem> settings = new ArrayList<>();
+        settings.add(new SettingItem("App Settings", "", 0));
+        settings.add(new SettingItem("Dark Mode", "Enable dark mode", 1));
+        settings.add(new SettingItem("Allow notifications", "Receive notifications from the app", 1));
+        settings.add(new SettingItem("Language", "Change the app language", 2));
+
+        if (user != null) {
+            settings.add(new SettingItem("Privacy Settings", "", 0));
+            settings.add(new SettingItem("Enable Notifications", "Get app alerts", 1));
+            settings.add(new SettingItem("Change Username", "Edit your display name", 2));
+            settings.add(new SettingItem("Sign out", "log out of your user into login screen", 2));
+        }
+        else {
+            settings.add(new SettingItem("Register/Login", "go to register", 2));
+        }
+        settings.add(new SettingItem("Community Settings", "", 0));
+        settings.add(new SettingItem("Allow Messages", "Receive messages from others", 1));
+
+        SettingsAdapter adapter = new SettingsAdapter(settings);
+        recyclerView.setAdapter(adapter);
+
+        // Handle item clicks in the adapter
+        adapter.setOnItemClickListener(new SettingsAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                if (settings.get(position).getTitle().equals("Sign out")) {
+                    showSignOutDialog();
+                }
+                if (settings.get(position).getTitle().equals("Register/Login")) {
+                    Intent intent = new Intent(getContext(), RegisterActivity.class);
+                    startActivity(intent);
+                }
+            }
+        });
+
+        return v;
+    }
+
+    private void showSignOutDialog() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Are you sure?")
+                .setMessage("Do you really want to sign out?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    // Call your log-out function here
+                    logOut();
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
+    private void logOut() {
+        // Your log out implementation here
+        // You might want to clear user data or session, etc.
+        // Example: FirebaseAuth.getInstance().signOut();
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(getContext(), LoginActivity.class);
+        startActivity(intent);
     }
 }
