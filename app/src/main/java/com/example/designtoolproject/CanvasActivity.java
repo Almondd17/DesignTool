@@ -41,6 +41,7 @@ public class CanvasActivity extends AppCompatActivity {
             idModeMap.put(R.id.circle, "circle");
             idModeMap.put(R.id.rectangle, "rectangle");
             idModeMap.put(R.id.line, "line");
+            idModeMap.put(R.id.editMode, "edit");
 
             String mode = idModeMap.get(item.getItemId());
 
@@ -57,5 +58,6 @@ public class CanvasActivity extends AppCompatActivity {
                 drawerLayout.openDrawer(GravityCompat.END);
             }
         });
+
     }
 }

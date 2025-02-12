@@ -24,7 +24,7 @@
             <!-- Mode selector -->
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/optionMenu"
-                android:layout_width="350dp"
+                android:layout_width="360dp"
                 android:layout_height="wrap_content"
                 android:background="@color/transparent"
                 app:itemActiveIndicatorStyle="@style/Widget.MaterialComponents.BottomNavigationView.Colored"
@@ -37,8 +37,8 @@
             <!-- Side menu button centered -->
             <ImageButton
                 android:id="@+id/toggleButton"
-                android:layout_width="40dp"
-                android:layout_height="50dp"
+                android:layout_width="39dp"
+                android:layout_height="47dp"
                 android:background="@drawable/menu_icon"
                 android:clickable="true"
                 android:focusable="true"
@@ -61,6 +61,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

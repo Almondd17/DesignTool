@@ -3,14 +3,17 @@
     import android.content.Context;
     import android.graphics.*;
     import android.util.AttributeSet;
+    import android.util.Log;
     import android.view.MotionEvent;
     import android.view.View;
     import java.util.ArrayList;
     import java.util.List;
+    import java.util.Stack;
 
     //abstract shape (monitor all shapes)
     abstract class Shape {
         protected Paint paint;
+        protected int id;
 
         public Shape(Paint paint) {
             this.paint = paint;
@@ -19,12 +22,25 @@
         public abstract void draw(Canvas canvas);
 
         public abstract void update(float x, float y);
+
+        public abstract boolean contains(float x, float y);
+
+
     }
 
     //circle shape
     class Circle extends Shape {
 
         private float centerX, centerY, radius;
+
+
+        public float getCenterX() {
+            return this.centerX;
+        }
+
+        public float getCenterY() {
+            return this.centerY;
+        }
 
         public Circle(float startX, float startY, Paint paint) {
             super(paint);
@@ -45,6 +61,16 @@
             float dx = x - centerX;
             float dy = y - centerY;
             this.radius = (float) Math.sqrt(dx * dx + dy * dy);//calc radius (distance formula :)
+        }
+
+        @Override
+        public boolean contains(float x, float y) {
+            float distance = (float) Math.sqrt((x-centerX)*(x-centerX) + (y-centerY)*(y-centerY));
+            return Math.abs(distance-radius) <= 50; //check if the given point is on the circle
+        }
+
+        public float getRadius() {
+            return this.radius;
         }
     }
 
@@ -71,6 +97,24 @@
             this.endX = x;
             this.endY = y;
         }
+
+        @Override
+        public boolean contains(float x, float y) {
+            //margin for user inaccuracy (30 pixels)
+            float margin = 30;
+
+            boolean nearLeftEdge = (x >= startX - margin) && (x <= startX + margin) && (y >= startY) && (y <= endY);
+            boolean nearRightEdge = (x >= endX - margin) && (x <= endX + margin) && (y >= startY) && (y <= endY);
+            boolean nearTopEdge = (y >= startY - margin) && (y <= startY + margin) && (x >= startX) && (x <= endX);
+            boolean nearBottomEdge = (y >= endY - margin) && (y <= endY + margin) && (x >= startX) && (x <= endX);
+
+            return nearLeftEdge || nearRightEdge || nearTopEdge || nearBottomEdge;
+        }
+
+        public float getStartX() { return startX; }
+        public float getStartY() { return startY; }
+        public float getEndX() { return endX; }
+        public float getEndY() { return endY; }
     }
 
     //line shape
@@ -96,6 +140,28 @@
             this.endX = x;
             this.endY = y;
         }
+
+        @Override
+        public boolean contains(float x, float y) {
+            float dx = endX - startX;
+            float dy = endY - startY;
+            float lineLength = (float) Math.sqrt(dx * dx + dy * dy);
+
+            // Handle case where line length is zero (start and end points are the same)
+            if (lineLength == 0) {
+                return Math.abs(x - startX) < 10 && Math.abs(y - startY) < 10; // 10 is a threshold for selection
+            }
+
+            // Calculate perpendicular distance from point (x, y) to the line
+            float distance = Math.abs(dy * x - dx * y + endX * startY - endY * startX) / lineLength;
+
+            return distance < 20; // 10 is the threshold distance for selecting the line
+        }
+
+        public float getStartX() { return startX; }
+        public float getStartY() { return startY; }
+        public float getEndX() { return endX; }
+        public float getEndY() { return endY; }
     }
 
     //free draw (pencil)
@@ -118,8 +184,22 @@
             path.lineTo(x, y);
         }
 
+        @Override
+        public boolean contains(float x, float y) {
+            // Get the bounding box of the path (for simplicity, use path's bounds)
+            RectF bounds = new RectF();
+            path.computeBounds(bounds, true);
+
+            // Check if the point is within the bounding box
+            return bounds.contains(x, y);
+        }
+
         public void start(float x, float y) {
             path.moveTo(x, y);
+        }
+
+        public Path getPath() {
+            return this.path;
         }
     }
 
@@ -129,8 +209,10 @@
         private Bitmap bitmap;
         private Canvas bitmapCanvas;
         private String drawingMode;
-        private Shape currentShape;
+        private Shape currentShape, selectedShape;
         private List<Shape> shapes;
+        private Stack<Shape> undoStack = new Stack<>();
+        private Stack<Shape> redoStack = new Stack<>();
 
         public CanvasView(Context context) {
             super(context);
@@ -172,6 +254,29 @@
             //draw each shapes
             for (Shape shape : shapes) {
                 shape.draw(canvas);
+
+                // Highlight if it's the selected shape
+                if (shape == selectedShape) {
+                    Paint highlightPaint = new Paint();
+                    highlightPaint.setColor(Color.RED);
+                    highlightPaint.setStyle(Paint.Style.STROKE);
+                    highlightPaint.setStrokeWidth(5f);
+
+                    if (shape instanceof Circle) {
+                        Circle c = (Circle) shape;
+                        canvas.drawCircle(c.getCenterX(), c.getCenterY(), c.getRadius() + 5, highlightPaint);
+                    } else if (shape instanceof Rectangle) {
+                        Rectangle r = (Rectangle) shape;
+                        canvas.drawRect(r.getStartX() - 5, r.getStartY() - 5, r.getEndX() + 5, r.getEndY() + 5, highlightPaint);
+                    } else if (shape instanceof Line) {
+                        Line l = (Line) shape;
+                        canvas.drawLine(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY(), highlightPaint);
+                    }
+                    else {
+                        PathShape p = (PathShape) shape;
+                        canvas.drawPath(p.getPath(), highlightPaint);
+                    }
+                }
             }
 
             //draw current shape
@@ -185,31 +290,77 @@
             float x = event.getX();
             float y = event.getY();
 
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    currentShape = createShape(x, y);
-                    if (currentShape instanceof PathShape) {
-                        ((PathShape) currentShape).start(x, y);
+            if (drawingMode.equals("edit")) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    selectedShape = null;
+                    for (Shape shape : shapes) {
+                        if (shape.contains(x, y)) {
+                            selectedShape = shape;
+                            break; // Stop checking after finding the first matching shape
+                        }
                     }
-                    break;
+                }
+                //debugging
+                if (selectedShape != null) {
+                    Log.d("CanvasView", "Shape selected: " + selectedShape.getClass().getSimpleName());
+                } else {
+                    Log.d("CanvasView", "No shape selected");
+                }
 
-                case MotionEvent.ACTION_MOVE:
-                    if (currentShape != null) {
-                        currentShape.update(x, y);
-                    }
-                    break;
+                invalidate();//redraw canvas (refresh) to show selected shapes
+                return true;
+                }
+            else {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        currentShape = createShape(x, y);
+                        if (currentShape instanceof PathShape) {
+                            ((PathShape) currentShape).start(x, y);
+                        }
+                        break;
 
-                case MotionEvent.ACTION_UP:
-                    if (currentShape != null) {
-                        currentShape.draw(bitmapCanvas);
-                        shapes.add(currentShape);
-                        currentShape = null;
-                    }
-                    break;
+                    case MotionEvent.ACTION_MOVE:
+                        if (currentShape != null) {
+                            currentShape.update(x, y);
+                        }
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+                        if (currentShape != null) {
+                            currentShape.draw(bitmapCanvas);
+                            shapes.add(currentShape);
+                            currentShape = null;
+                        }
+                        break;
+                }
             }
-
             invalidate();
             return true;
+        }
+
+        public void deleteSelectedShape() {
+            if (selectedShape != null) {
+                shapes.remove(selectedShape);  // Remove from list
+                selectedShape = null;          // Clear selection
+                invalidate();                   // Redraw the canvas
+            }
+        }
+
+        public void undo() {
+            if (!shapes.isEmpty()) {
+                Shape lastShape = shapes.remove(shapes.size() - 1); // Remove last shape
+                undoStack.push(lastShape); // Store in undo stack
+                redoStack.clear(); // Clear redo stack (standard behavior)
+                invalidate(); // Redraw canvas
+            }
+        }
+
+        public void redo() {
+            if (!undoStack.isEmpty()) {
+                Shape shape = undoStack.pop(); // Get last undone shape
+                shapes.add(shape); // Re-add it to canvas
+                invalidate(); // Redraw canvas
+            }
         }
 
         private Shape createShape(float x, float y) {

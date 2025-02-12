@@ -12,4 +12,7 @@
     <item android:title=""
         android:id="@+id/line"
         android:icon="@drawable/line_icon"/>
+    <item android:title=""
+        android:id="@+id/editMode"
+        android:icon="@drawable/select_icon"/>
 </menu>
