@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/item1" android:title="Item 1"/>
-    <item android:id="@+id/item2" android:title="Save Drawing"/>
+    <item android:id="@+id/item1" android:title="Change brush">
+        <menu>
+            <group android:checkableBehavior="single">
+            <item android:id="@+id/brush1"
+                android:title="brush1" />
+            <item android:id="@+id/brush2"
+                android:title="brush2" />
+            <item android:id="@+id/brush3"
+                android:title="brush3" />
+            </group>
+        </menu>
+    </item>
+    <item android:id="@+id/item2" android:title="Change brush color">
+        <menu>
+            <item android:id="@+id/palate"
+                android:title="colors chooser" />
+        </menu>
+    </item>
+    <item android:id="@+id/item3" android:title="Save Drawing"/>
 </menu>

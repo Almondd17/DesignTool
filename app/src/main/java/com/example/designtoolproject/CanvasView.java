@@ -25,7 +25,6 @@
 
         public abstract boolean contains(float x, float y);
 
-
     }
 
     //circle shape
@@ -205,7 +204,7 @@
 
     //canvas view class (the canvas)
     public class CanvasView extends View {
-        private Paint paint;
+        private Paint currentPaint;
         private Bitmap bitmap;
         private Canvas bitmapCanvas;
         private String drawingMode;
@@ -225,12 +224,33 @@
         }
 
         private void init() {
-            paint = new Paint();
-            paint.setColor(0xFF000000);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(5f);
+            currentPaint = new Paint();
+            setColor(0xff000000);
+            setCurrentPaint(1);
             drawingMode = "pencil";
             shapes = new ArrayList<>();
+        }
+
+        public void setColor(int color) {
+            currentPaint.setColor(color);
+            invalidate();
+        }
+
+        public void setCurrentPaint(int m){
+            switch(m) {
+                case 1:
+                    currentPaint.setStyle(Paint.Style.STROKE);
+                    currentPaint.setStrokeWidth(5f);
+                    break;
+                case 2:
+                    currentPaint.setStyle(Paint.Style.STROKE);
+                    currentPaint.setStrokeWidth(8f);
+                    break;
+                case 3:
+                    currentPaint.setStyle(Paint.Style.STROKE);
+                    currentPaint.setStrokeWidth(12f);
+                    break;
+            }
         }
 
         public void setMode(String mode) {
@@ -257,25 +277,7 @@
 
                 // Highlight if it's the selected shape
                 if (shape == selectedShape) {
-                    Paint highlightPaint = new Paint();
-                    highlightPaint.setColor(Color.RED);
-                    highlightPaint.setStyle(Paint.Style.STROKE);
-                    highlightPaint.setStrokeWidth(5f);
-
-                    if (shape instanceof Circle) {
-                        Circle c = (Circle) shape;
-                        canvas.drawCircle(c.getCenterX(), c.getCenterY(), c.getRadius() + 5, highlightPaint);
-                    } else if (shape instanceof Rectangle) {
-                        Rectangle r = (Rectangle) shape;
-                        canvas.drawRect(r.getStartX() - 5, r.getStartY() - 5, r.getEndX() + 5, r.getEndY() + 5, highlightPaint);
-                    } else if (shape instanceof Line) {
-                        Line l = (Line) shape;
-                        canvas.drawLine(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY(), highlightPaint);
-                    }
-                    else {
-                        PathShape p = (PathShape) shape;
-                        canvas.drawPath(p.getPath(), highlightPaint);
-                    }
+                    //selected shape logic (delete, change, etc...)
                 }
             }
 
@@ -337,7 +339,21 @@
             invalidate();
             return true;
         }
-
+        private Shape createShape(float x, float y) {
+            Paint shapePaint = new Paint(currentPaint); //create a new paint for the current shape
+            switch (drawingMode) {
+                case "circle":
+                    return new Circle(x, y, shapePaint);
+                case "rectangle":
+                    return new Rectangle(x, y, shapePaint);
+                case "line":
+                    return new Line(x, y, shapePaint);
+                case "pencil":
+                    return new PathShape(shapePaint);
+                default:
+                    throw new IllegalArgumentException("Unknown drawing mode: " + drawingMode);
+            }
+        }
         public void deleteSelectedShape() {
             if (selectedShape != null) {
                 shapes.remove(selectedShape);  // Remove from list
@@ -360,21 +376,6 @@
                 Shape shape = undoStack.pop(); // Get last undone shape
                 shapes.add(shape); // Re-add it to canvas
                 invalidate(); // Redraw canvas
-            }
-        }
-
-        private Shape createShape(float x, float y) {
-            switch (drawingMode) {
-                case "circle":
-                    return new Circle(x, y, paint);
-                case "rectangle":
-                    return new Rectangle(x, y, paint);
-                case "line":
-                    return new Line(x, y, paint);
-                case "pencil":
-                    return new PathShape(paint);
-                default:
-                    throw new IllegalArgumentException("Unknown drawing mode: " + drawingMode);
             }
         }
     }

@@ -67,17 +67,17 @@ public class RegisterActivity extends AppCompatActivity {
 
 
                 if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(RegisterActivity.this, "Please enter an email", Toast.LENGTH_SHORT).show();
+                    editTextPassword.setError("please enter an email");
                     return;
                 }
 
                 if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(RegisterActivity.this, "Please enter a password", Toast.LENGTH_SHORT).show();
+                    editTextPassword.setError("please enter a password");
                     return;
                 }
 
                 if (password.length() < 6) {
-                    Toast.makeText(RegisterActivity.this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+                    editTextPassword.setError("At least 6 characters required");
                     return;
                 }
 
