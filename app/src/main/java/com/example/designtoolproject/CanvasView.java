@@ -3,9 +3,12 @@
     import android.content.Context;
     import android.graphics.*;
     import android.util.AttributeSet;
+    import android.util.Base64;
     import android.util.Log;
     import android.view.MotionEvent;
     import android.view.View;
+
+    import java.io.ByteArrayOutputStream;
     import java.util.ArrayList;
     import java.util.List;
     import java.util.Stack;
@@ -236,8 +239,8 @@
             invalidate();
         }
 
-        public void setCurrentPaint(int m){
-            switch(m) {
+        public void setCurrentPaint(int m) {
+            switch (m) {
                 case 1:
                     currentPaint.setStyle(Paint.Style.STROKE);
                     currentPaint.setStrokeWidth(5f);
@@ -311,8 +314,7 @@
 
                 invalidate();//redraw canvas (refresh) to show selected shapes
                 return true;
-                }
-            else {
+            } else {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         currentShape = createShape(x, y);
@@ -339,6 +341,7 @@
             invalidate();
             return true;
         }
+
         private Shape createShape(float x, float y) {
             Paint shapePaint = new Paint(currentPaint); //create a new paint for the current shape
             switch (drawingMode) {
@@ -354,6 +357,7 @@
                     throw new IllegalArgumentException("Unknown drawing mode: " + drawingMode);
             }
         }
+
         public void deleteSelectedShape() {
             if (selectedShape != null) {
                 shapes.remove(selectedShape);  // Remove from list
@@ -377,5 +381,17 @@
                 shapes.add(shape); // Re-add it to canvas
                 invalidate(); // Redraw canvas
             }
+        }
+
+        public String getDrawingAsBase64() {
+            Bitmap bitmap = getDrawingBitmap(); // A method to get the drawing as a bitmap
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+            return Base64.encodeToString(byteArray, Base64.DEFAULT);
+        }
+
+        private Bitmap getDrawingBitmap() {
+            return this.bitmap;
         }
     }
