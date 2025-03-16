@@ -2,9 +2,14 @@ package com.example.designtoolproject;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -18,6 +23,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,28 +131,54 @@ public class CanvasActivity extends AppCompatActivity {
             return;
         }
 
-        //convert drawing to base64 string
-        String base64Image = canvasView.getDrawingAsBase64();
+        // Wait for the layout to finish to get the correct size
+        canvasView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                //remove the listener to prevent it from being called repeatedly
+                canvasView.getViewTreeObserver().removeOnPreDrawListener(this);
 
-        Map<String, Object> drawingData = new HashMap<>();
-        drawingData.put("name", drawingName);
-        drawingData.put("timestamp", System.currentTimeMillis());
-        drawingData.put("data", base64Image);
+                //get width and height of the CanvasView
+                int width = canvasView.getWidth();
+                int height = canvasView.getHeight();
 
-        //save to firebase real time db as string
-        FirebaseDatabase.getInstance().getReference()
-                .child("drawings")
-                .child(userId)
-                .child(drawingId)
-                .setValue(drawingData)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Drawing saved!", Toast.LENGTH_SHORT).show();
-                    //go back to inventory after successful saving with the drawing name
-                    Intent intent = new Intent(this, InventoryFragment.class);
-                    intent.putExtra("drawingId", drawingId); // Pass the drawingId
-                    startActivity(intent);
-                })
-                .addOnFailureListener(e -> Toast.makeText(this, "Failed to save drawing", Toast.LENGTH_SHORT).show());
+                //create a bitmap with the correct size (match the canvas size)
+                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bitmap);
+
+                //draw the CanvasView content onto the bitmap
+                canvasView.draw(canvas); // Make sure the entire drawing is rendered onto the bitmap
+
+                //compress and encode the bitmap as before
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream); // Compress as PNG
+                byte[] byteArray = byteArrayOutputStream.toByteArray();
+                String base64String = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                Log.e("Encoding", "base64 string during save: " + base64String);
+
+                Map<String, Object> drawingData = new HashMap<>();
+                drawingData.put("name", drawingName);
+                drawingData.put("timestamp", System.currentTimeMillis());
+                drawingData.put("data", base64String);
+
+                //save to Firebase Realtime DB as string
+                FirebaseDatabase.getInstance().getReference()
+                        .child("drawings")
+                        .child(userId)
+                        .child(drawingId)
+                        .setValue(drawingData)
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(CanvasActivity.this, "Drawing saved!", Toast.LENGTH_SHORT).show();
+                            // Go back to inventory after successful saving with the drawing name
+                            Intent intent = new Intent(CanvasActivity.this, InventoryFragment.class);
+                            intent.putExtra("drawingId", drawingId); // Pass the drawingId
+                            startActivity(intent);
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(CanvasActivity.this, "Failed to save drawing", Toast.LENGTH_SHORT).show());
+
+                return true; // Allow the drawing to continue
+            }
+        });
     }
 
 

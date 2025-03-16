@@ -11,8 +11,11 @@ firebaseDatabase = "21.0.0"
 firebaseAuth = "23.1.0"
 googleGmsGoogleServices = "4.4.2"
 preference = "1.2.1"
+glide = "4.12.0"
 
 [libraries]
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 #color picker:
 ambilwarna = "com.github.yukuku:ambilwarna:2.0.1"
 junit = { group = "junit", name = "junit", version.ref = "junit" }

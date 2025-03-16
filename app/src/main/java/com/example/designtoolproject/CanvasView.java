@@ -68,7 +68,7 @@
         @Override
         public boolean contains(float x, float y) {
             float distance = (float) Math.sqrt((x-centerX)*(x-centerX) + (y-centerY)*(y-centerY));
-            return Math.abs(distance-radius) <= 50; //check if the given point is on the circle
+            return Math.abs(distance-radius) <= 50;//check if the given point is on the circle
         }
 
         public float getRadius() {
@@ -278,7 +278,7 @@
             for (Shape shape : shapes) {
                 shape.draw(canvas);
 
-                // Highlight if it's the selected shape
+                //if its the selected shape
                 if (shape == selectedShape) {
                     //selected shape logic (delete, change, etc...)
                 }
@@ -301,7 +301,7 @@
                     for (Shape shape : shapes) {
                         if (shape.contains(x, y)) {
                             selectedShape = shape;
-                            break; // Stop checking after finding the first matching shape
+                            break; //stop checking after finding the first matching shape
                         }
                     }
                 }
@@ -343,7 +343,7 @@
         }
 
         private Shape createShape(float x, float y) {
-            Paint shapePaint = new Paint(currentPaint); //create a new paint for the current shape
+            Paint shapePaint = new Paint(currentPaint);//create a new paint for the current shape
             switch (drawingMode) {
                 case "circle":
                     return new Circle(x, y, shapePaint);
@@ -383,15 +383,20 @@
             }
         }
 
-        public String getDrawingAsBase64() {
-            Bitmap bitmap = getDrawingBitmap(); // A method to get the drawing as a bitmap
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-            byte[] byteArray = byteArrayOutputStream.toByteArray();
-            return Base64.encodeToString(byteArray, Base64.DEFAULT);
+        public Bitmap getBitmap() {
+            // Ensure the Bitmap size is big enough to fit the entire drawing
+            int width = getWidth();
+            int height = getHeight();
+
+            // If the drawing might exceed the view's bounds, make the Bitmap bigger
+            int padding = 100; // Add some extra padding to ensure it fits
+            Bitmap bitmap = Bitmap.createBitmap(width + padding, height + padding, Bitmap.Config.ARGB_8888);
+
+            Canvas canvas = new Canvas(bitmap);
+            draw(canvas); // Redraw the view's content to the Bitmap
+
+            return bitmap;
         }
 
-        private Bitmap getDrawingBitmap() {
-            return this.bitmap;
-        }
+
     }
