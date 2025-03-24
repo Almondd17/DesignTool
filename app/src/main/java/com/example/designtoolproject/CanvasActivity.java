@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,6 +14,8 @@ import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import android.widget.Toolbar;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
@@ -36,7 +39,10 @@ public class CanvasActivity extends AppCompatActivity {
     private ImageButton toggleButton;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
+    private ImageButton redoBtn, undoBtn;
+    private Toolbar toolbar;
     private FirebaseUser user;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +53,8 @@ public class CanvasActivity extends AppCompatActivity {
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.navigation_view);
         user = FirebaseAuth.getInstance().getCurrentUser();
+        redoBtn = findViewById(R.id.redoButton);
+        undoBtn = findViewById(R.id.undoButton);
 
         optionMenu.setOnItemSelectedListener(item -> {
             Map<Integer, String> idModeMap = new HashMap<>();
@@ -94,6 +102,20 @@ public class CanvasActivity extends AppCompatActivity {
                 }
             }
         });
+
+        undoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                canvasView.undo();
+            }
+        });
+
+        redoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                canvasView.redo();
+            }
+        });
     }
 
     private void showNameInputDialog() {
@@ -123,7 +145,7 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
     private void onSave(String drawingName) {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid(); // Get the current user ID
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         String drawingId = FirebaseDatabase.getInstance().getReference().child("drawings").child(userId).push().getKey();
 
         if (drawingId == null) {
@@ -131,56 +153,48 @@ public class CanvasActivity extends AppCompatActivity {
             return;
         }
 
-        // Wait for the layout to finish to get the correct size
-        canvasView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-                //remove the listener to prevent it from being called repeatedly
-                canvasView.getViewTreeObserver().removeOnPreDrawListener(this);
+        canvasView.post(() -> {
+            //get the display metrics
+            DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+            int screenWidth = displayMetrics.widthPixels;
+            int screenHeight = displayMetrics.heightPixels;
 
-                //get width and height of the CanvasView
-                int width = canvasView.getWidth();
-                int height = canvasView.getHeight();
+            //create a bitmap of the exact screen resolution (scaled for high-res displays)
+            Bitmap scaledBitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
+            Canvas bitmapCanvas = new Canvas(scaledBitmap);
 
-                //create a bitmap with the correct size (match the canvas size)
-                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(bitmap);
+            //scale the canvas to match the screen resolution, considering the screen's density
+            canvasView.layout(0, 0, screenWidth, screenHeight);
+            canvasView.draw(bitmapCanvas);
 
-                //draw the CanvasView content onto the bitmap
-                canvasView.draw(canvas); // Make sure the entire drawing is rendered onto the bitmap
+            //compress the bitmap into a byte array
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+            String base64String = Base64.encodeToString(byteArray, Base64.DEFAULT);
 
-                //compress and encode the bitmap as before
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream); // Compress as PNG
-                byte[] byteArray = byteArrayOutputStream.toByteArray();
-                String base64String = Base64.encodeToString(byteArray, Base64.DEFAULT);
-                Log.e("Encoding", "base64 string during save: " + base64String);
+            Log.e("encoding", "base64 string: "+base64String);
 
-                Map<String, Object> drawingData = new HashMap<>();
-                drawingData.put("name", drawingName);
-                drawingData.put("timestamp", System.currentTimeMillis());
-                drawingData.put("data", base64String);
+            //save the drawing data
+            Map<String, Object> drawingData = new HashMap<>();
+            drawingData.put("name", drawingName);
+            drawingData.put("timestamp", System.currentTimeMillis());
+            drawingData.put("data", base64String);
 
-                //save to Firebase Realtime DB as string
-                FirebaseDatabase.getInstance().getReference()
-                        .child("drawings")
-                        .child(userId)
-                        .child(drawingId)
-                        .setValue(drawingData)
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(CanvasActivity.this, "Drawing saved!", Toast.LENGTH_SHORT).show();
-                            // Go back to inventory after successful saving with the drawing name
-                            Intent intent = new Intent(CanvasActivity.this, InventoryFragment.class);
-                            intent.putExtra("drawingId", drawingId); // Pass the drawingId
-                            startActivity(intent);
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(CanvasActivity.this, "Failed to save drawing", Toast.LENGTH_SHORT).show());
-
-                return true; // Allow the drawing to continue
-            }
+            FirebaseDatabase.getInstance().getReference()
+                    .child("drawings")
+                    .child(userId)
+                    .child(drawingId)
+                    .setValue(drawingData)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(CanvasActivity.this, "Drawing saved!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(CanvasActivity.this, HomePage.class);
+                        intent.putExtra("drawingId", drawingId);
+                        startActivity(intent);
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(CanvasActivity.this, "Failed to save drawing", Toast.LENGTH_SHORT).show());
         });
     }
-
 
     @Override
     public void onBackPressed() {//prevent "easy" exit during drawing

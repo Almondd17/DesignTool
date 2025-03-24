@@ -263,28 +263,29 @@
         @Override
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
+            // Initialize the bitmap and canvas with the full size of the canvas view
             bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             bitmapCanvas = new Canvas(bitmap);
+            redrawBitmap();  // Redraw shapes into the new bitmap
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-
-            //draw bitmap
+            // Draw the bitmap (which contains all the shapes) onto the canvas
             canvas.drawBitmap(bitmap, 0, 0, null);
 
-            //draw each shapes
+            // Draw each shape directly onto the canvas, this could be redundant if you prefer drawing from bitmap only
             for (Shape shape : shapes) {
                 shape.draw(canvas);
 
-                //if its the selected shape
+                // If it's the selected shape, you can add special logic here (for example, drawing selection indicators)
                 if (shape == selectedShape) {
-                    //selected shape logic (delete, change, etc...)
+                    // Optional: Draw something on the selected shape (e.g., a border or handle)
                 }
             }
 
-            //draw current shape
+            // Draw the current shape if the user is still in the process of drawing
             if (currentShape != null) {
                 currentShape.draw(canvas);
             }
@@ -301,19 +302,12 @@
                     for (Shape shape : shapes) {
                         if (shape.contains(x, y)) {
                             selectedShape = shape;
-                            break; //stop checking after finding the first matching shape
+                            break;  // Stop checking after finding the first matching shape
                         }
                     }
+                    invalidate(); // Redraw canvas to show selected shapes
+                    return true;
                 }
-                //debugging
-                if (selectedShape != null) {
-                    Log.d("CanvasView", "Shape selected: " + selectedShape.getClass().getSimpleName());
-                } else {
-                    Log.d("CanvasView", "No shape selected");
-                }
-
-                invalidate();//redraw canvas (refresh) to show selected shapes
-                return true;
             } else {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
@@ -331,9 +325,10 @@
 
                     case MotionEvent.ACTION_UP:
                         if (currentShape != null) {
-                            currentShape.draw(bitmapCanvas);
+                            currentShape.draw(bitmapCanvas);  // Draw the final shape onto the bitmap
                             shapes.add(currentShape);
                             currentShape = null;
+                            redrawBitmap();  // Redraw bitmap after shape is added
                         }
                         break;
                 }
@@ -343,7 +338,7 @@
         }
 
         private Shape createShape(float x, float y) {
-            Paint shapePaint = new Paint(currentPaint);//create a new paint for the current shape
+            Paint shapePaint = new Paint(currentPaint); // Create a new paint for the current shape
             switch (drawingMode) {
                 case "circle":
                     return new Circle(x, y, shapePaint);
@@ -358,45 +353,37 @@
             }
         }
 
-        public void deleteSelectedShape() {
-            if (selectedShape != null) {
-                shapes.remove(selectedShape);  // Remove from list
-                selectedShape = null;          // Clear selection
-                invalidate();                   // Redraw the canvas
-            }
-        }
-
         public void undo() {
             if (!shapes.isEmpty()) {
-                Shape lastShape = shapes.remove(shapes.size() - 1); // Remove last shape
-                undoStack.push(lastShape); // Store in undo stack
-                redoStack.clear(); // Clear redo stack (standard behavior)
-                invalidate(); // Redraw canvas
+                Shape lastShape = shapes.get(shapes.size() - 1);  // Get the last shape
+                redoStack.push(lastShape);  // Save a copy in redoStack first
+                shapes.remove(shapes.size() - 1);  // Now remove it
+                redrawBitmap();  // Redraw bitmap after undo
             }
         }
 
         public void redo() {
-            if (!undoStack.isEmpty()) {
-                Shape shape = undoStack.pop(); // Get last undone shape
-                shapes.add(shape); // Re-add it to canvas
-                invalidate(); // Redraw canvas
+            if (!redoStack.isEmpty()) {
+                Shape shape = redoStack.pop();
+                shapes.add(shape);
+                redrawBitmap();  // Redraw bitmap after redo
+            }
+        }
+
+        private void redrawBitmap() {
+            if (bitmapCanvas != null) {
+                bitmap.eraseColor(Color.TRANSPARENT);  // Clear the bitmap
+                bitmapCanvas.drawColor(Color.WHITE);  // Optionally set a background color
+
+                // Redraw all shapes onto the bitmap
+                for (Shape shape : shapes) {
+                    shape.draw(bitmapCanvas);
+                }
+                invalidate();  // Request a redraw of the view
             }
         }
 
         public Bitmap getBitmap() {
-            // Ensure the Bitmap size is big enough to fit the entire drawing
-            int width = getWidth();
-            int height = getHeight();
-
-            // If the drawing might exceed the view's bounds, make the Bitmap bigger
-            int padding = 100; // Add some extra padding to ensure it fits
-            Bitmap bitmap = Bitmap.createBitmap(width + padding, height + padding, Bitmap.Config.ARGB_8888);
-
-            Canvas canvas = new Canvas(bitmap);
-            draw(canvas); // Redraw the view's content to the Bitmap
-
-            return bitmap;
+            return this.bitmap;  // Return the current bitmap with all the shapes
         }
-
-
     }

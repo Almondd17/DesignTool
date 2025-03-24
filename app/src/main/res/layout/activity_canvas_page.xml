@@ -52,16 +52,48 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Canvas drawing area -->
+
+
         <com.example.designtoolproject.CanvasView
             android:id="@+id/DrawView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:background="@color/white"
-            app:layout_constraintTop_toBottomOf="@id/topBarLayout"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/topBarLayout"
+            app:layout_constraintVertical_bias="0.0" />
 
+        <LinearLayout
+            android:layout_width="169dp"
+            android:layout_height="61dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageButton
+                android:id="@+id/undoButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00FFFFFF"
+                app:srcCompat="@drawable/undo_icon"
+                tools:layout_editor_absoluteX="146dp"
+                tools:layout_editor_absoluteY="655dp" />
+
+            <ImageButton
+                android:id="@+id/redoButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:backgroundTint="#00FFFFFF"
+                app:srcCompat="@drawable/redo_icon"
+                tools:layout_editor_absoluteX="234dp"
+                tools:layout_editor_absoluteY="655dp" />
+
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
