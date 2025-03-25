@@ -15,6 +15,9 @@
         android:theme="@style/Theme.DesignToolProject"
         tools:targetApi="31">
         <activity
+            android:name=".resetPasswordActivity"
+            android:exported="false" />
+        <activity
             android:name=".DrawingPostActivity"
             android:exported="false" />
         <activity

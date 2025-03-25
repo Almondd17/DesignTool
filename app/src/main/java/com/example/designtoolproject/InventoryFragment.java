@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class InventoryFragment extends Fragment {
     private RecyclerView recyclerView;
     private DrawingAdapter adapter;
     private List<Drawing> drawingList = new ArrayList<>();
+    ProgressBar progressBar;
 
 
     public InventoryFragment() {
@@ -50,6 +52,9 @@ public class InventoryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_inventory, container, false);
+
+        progressBar = view.findViewById(R.id.progressBar2);
+        progressBar.setVisibility(View.VISIBLE);
 
         Button myButton = view.findViewById(R.id.goToPage);
         myButton.setOnClickListener(v -> {
@@ -98,6 +103,9 @@ public class InventoryFragment extends Fragment {
                         }
                         //update adapter
                         adapter.notifyDataSetChanged();
+                        if (progressBar != null) {
+                            progressBar.setVisibility(View.GONE);
+                        }
                     }
 
                     @Override

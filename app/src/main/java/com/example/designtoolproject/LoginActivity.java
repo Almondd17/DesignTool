@@ -91,4 +91,9 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = new Intent(this, HomePage.class);
         startActivity(intent);
     }
+
+    public void resetPasswordPage(View view) {
+        Intent intent = new Intent(this, resetPasswordActivity.class);
+        startActivity(intent);
+    }
 }
