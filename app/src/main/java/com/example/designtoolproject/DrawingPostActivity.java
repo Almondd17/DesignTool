@@ -14,5 +14,6 @@ public class DrawingPostActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drawing_post);
+
     }
 }

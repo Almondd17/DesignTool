@@ -56,9 +56,10 @@
         android:id="@+id/GoToRegister"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:text="Sign up"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="24dp"
         android:onClick="GoToRegister"
+        android:text="Sign up"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.75"
@@ -77,11 +78,12 @@
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="24dp"
         android:text="don't have an account yet?"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/GoToRegister"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/GoToRegister" />
 
     <TextView
@@ -99,22 +101,25 @@
         android:id="@+id/forgotPasswordText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="75dp"
+        android:layout_marginEnd="8dp"
         android:text="forgot your password?"
         app:layout_constraintBottom_toTopOf="@+id/GoToRegister"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.32"
+        app:layout_constraintEnd_toStartOf="@+id/resetPasswordBtn"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/guestEnter"
-        app:layout_constraintVertical_bias="0.9" />
+        app:layout_constraintVertical_bias="0.82" />
 
     <Button
         android:id="@+id/resetPasswordBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginEnd="75dp"
+        android:onClick="resetPasswordPage"
         android:text="click here"
         app:layout_constraintBottom_toBottomOf="@+id/forgotPasswordText"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/forgotPasswordText"
-        app:layout_constraintTop_toTopOf="@+id/forgotPasswordText"
-        android:onClick="resetPasswordPage"/>
+        app:layout_constraintTop_toTopOf="@+id/forgotPasswordText" />
 </androidx.constraintlayout.widget.ConstraintLayout>

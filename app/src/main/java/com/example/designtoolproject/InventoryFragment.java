@@ -54,7 +54,7 @@ public class InventoryFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_inventory, container, false);
 
         progressBar = view.findViewById(R.id.progressBar2);
-        progressBar.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.GONE);
 
         Button myButton = view.findViewById(R.id.goToPage);
         myButton.setOnClickListener(v -> {
@@ -83,6 +83,7 @@ public class InventoryFragment extends Fragment {
             return;
         }
         String userId = user.getUid();
+        progressBar.setVisibility(View.VISIBLE);
 
         // Query Firebase for the user's drawings
         FirebaseDatabase.getInstance().getReference()

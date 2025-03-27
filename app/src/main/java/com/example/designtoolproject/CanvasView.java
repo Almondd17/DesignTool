@@ -29,6 +29,7 @@
 
         public abstract boolean contains(float x, float y);
 
+        public abstract RectF getBounds();
     }
 
     //circle shape
@@ -72,8 +73,9 @@
             return Math.abs(distance-radius) <= 50;//check if the given point is on the circle
         }
 
-        public float getRadius() {
-            return this.radius;
+        @Override
+        public RectF getBounds() {
+            return new RectF(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
         }
     }
 
@@ -118,6 +120,11 @@
         public float getStartY() { return startY; }
         public float getEndX() { return endX; }
         public float getEndY() { return endY; }
+
+        @Override
+        public RectF getBounds() {
+            return new RectF(Math.min(startX, endX), Math.min(startY, endY), Math.max(startX, endX), Math.max(startY, endY));
+        }
     }
 
     //line shape
@@ -150,59 +157,60 @@
             float dy = endY - startY;
             float lineLength = (float) Math.sqrt(dx * dx + dy * dy);
 
-            // Handle case where line length is zero (start and end points are the same)
+            //handle case where line length is zero (start and end points are the same)
             if (lineLength == 0) {
                 return Math.abs(x - startX) < 10 && Math.abs(y - startY) < 10; // 10 is a threshold for selection
             }
 
-            // Calculate perpendicular distance from point (x, y) to the line
+            //calculate perpendicular distance from point (x, y) to the line
             float distance = Math.abs(dy * x - dx * y + endX * startY - endY * startX) / lineLength;
 
-            return distance < 20; // 10 is the threshold distance for selecting the line
+            return distance < 20;//10 is the threshold distance for selecting the line
         }
 
         public float getStartX() { return startX; }
         public float getStartY() { return startY; }
         public float getEndX() { return endX; }
         public float getEndY() { return endY; }
+
+        @Override
+        public RectF getBounds() {
+            return new RectF(Math.min(startX, endX), Math.min(startY, endY), Math.max(startX, endX), Math.max(startY, endY));
+        }
     }
 
     //free draw (pencil)
     class PathShape extends Shape {
-
         private Path path;
-
         public PathShape(Paint paint) {
             super(paint);
             this.path = new Path();
         }
-
         @Override
         public void draw(Canvas canvas) {
             canvas.drawPath(path, paint);
         }
-
         @Override
         public void update(float x, float y) {
             path.lineTo(x, y);
         }
-
         @Override
         public boolean contains(float x, float y) {
-            // Get the bounding box of the path (for simplicity, use path's bounds)
+            //get the bounding box of the path
             RectF bounds = new RectF();
             path.computeBounds(bounds, true);
 
-            // Check if the point is within the bounding box
+            //check if the point is within the bounding box
             return bounds.contains(x, y);
         }
-
         public void start(float x, float y) {
             path.moveTo(x, y);
         }
-
-        public Path getPath() {
-            return this.path;
+        @Override
+        public RectF getBounds() {
+            RectF bounds = new RectF();
+            path.computeBounds(bounds, true);
+            return bounds;
         }
     }
 
@@ -216,7 +224,10 @@
         private List<Shape> shapes;
         private Stack<Shape> undoStack = new Stack<>();
         private Stack<Shape> redoStack = new Stack<>();
-        private LinearLayout toolbarLayout;
+        private RectF toolbarRect;
+        private boolean isToolbarVisible = false;
+        private final int TOOLBAR_WIDTH = 150;
+        private final int TOOLBAR_HEIGHT = 60;
 
         public CanvasView(Context context) {
             super(context);
@@ -275,19 +286,40 @@
             super.onDraw(canvas);
             canvas.drawBitmap(bitmap, 0, 0, null);
 
-            //draw all shapes from list
+            //draw all shapes
             for (Shape shape : shapes) {
                 shape.draw(canvas);
-
-                // If it's the selected shape, you can add special logic here (for example, drawing selection indicators)
-                if (shape == selectedShape) {
-                    // Optional: Draw something on the selected shape (e.g., a border or handle)
-                }
             }
 
-            // Draw the current shape if the user is still in the process of drawing
+            //draw the shape while it’s being drawn
             if (currentShape != null) {
                 currentShape.draw(canvas);
+            }
+
+            //draw selection border and toolbar
+            if (selectedShape != null) {
+                Paint highlightPaint = new Paint();
+                highlightPaint.setColor(Color.RED);
+                highlightPaint.setStyle(Paint.Style.STROKE);
+                highlightPaint.setStrokeWidth(5f);
+                RectF bounds = selectedShape.getBounds();
+                canvas.drawRect(bounds, highlightPaint);
+
+                //draw toolbar
+                float toolbarX = bounds.right + 20;
+                float toolbarY = bounds.top;
+                toolbarRect = new RectF(toolbarX, toolbarY, toolbarX + TOOLBAR_WIDTH, toolbarY + TOOLBAR_HEIGHT);
+                Paint toolbarPaint = new Paint();
+                toolbarPaint.setColor(Color.LTGRAY);
+                canvas.drawRoundRect(toolbarRect, 10, 10, toolbarPaint);
+
+                //draw delete icon
+                Paint textPaint = new Paint();
+                textPaint.setColor(Color.BLACK);
+                textPaint.setTextSize(40);
+                canvas.drawText("🗑", toolbarX + 50, toolbarY + 45, textPaint);
+
+                isToolbarVisible = true;
             }
         }
 
@@ -298,17 +330,26 @@
 
             if (drawingMode.equals("edit")) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    if (isToolbarVisible && toolbarRect.contains(x, y)) {
+                        //delete shape
+                        shapes.remove(selectedShape);
+                        selectedShape = null;
+                        isToolbarVisible = false;
+                        redrawBitmap();//ensure the shape is erased from the bitmap
+                        return true;
+                    }
                     selectedShape = null;
                     for (Shape shape : shapes) {
                         if (shape.contains(x, y)) {
                             selectedShape = shape;
-                            break;//stop checking after finding the first matching shape
+                            break;//stop checking after finding a shape
                         }
                     }
-                    invalidate();//maybe show selected shape changes
+                    invalidate();
                     return true;
                 }
             } else {
+                selectedShape = null;
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         currentShape = createShape(x, y);
@@ -320,15 +361,16 @@
                     case MotionEvent.ACTION_MOVE:
                         if (currentShape != null) {
                             currentShape.update(x, y);
+                            invalidate();//update in real-time
                         }
                         break;
 
                     case MotionEvent.ACTION_UP:
                         if (currentShape != null) {
-                            currentShape.draw(bitmapCanvas);  // Draw the final shape onto the bitmap
+                            currentShape.draw(bitmapCanvas);//draw the final shape onto the bitmap
                             shapes.add(currentShape);
                             currentShape = null;
-                            redrawBitmap();  // Redraw bitmap after shape is added
+                            redrawBitmap();//ensure the shape is properly saved
                         }
                         break;
                 }
@@ -338,7 +380,7 @@
         }
 
         private Shape createShape(float x, float y) {
-            Paint shapePaint = new Paint(currentPaint); // Create a new paint for the current shape
+            Paint shapePaint = new Paint(currentPaint);//create a new paint for the current shape
             switch (drawingMode) {
                 case "circle":
                     return new Circle(x, y, shapePaint);
