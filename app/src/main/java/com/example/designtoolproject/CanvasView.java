@@ -424,4 +424,10 @@
                 invalidate();//refresh view
             }
         }
+
+        public void loadBitmap(Bitmap bitmap) {
+            this.bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+            bitmapCanvas = new Canvas(this.bitmap);
+            invalidate(); // Refresh the view
+        }
     }
