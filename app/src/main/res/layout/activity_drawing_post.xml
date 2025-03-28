@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:background="@drawable/rounded_card"
+        android:background="@drawable/button_design"
         android:text="TextView"
         android:textColor="#FFFFFF"
         android:textSize="20sp"
@@ -36,6 +36,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/edit_icon_white"
-        android:background="@drawable/rounded_card"/>
+        android:background="@drawable/button_design"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
