@@ -15,7 +15,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -36,8 +38,7 @@ public class InventoryFragment extends Fragment {
     private DrawingAdapter adapter;
     private List<Drawing> drawingList = new ArrayList<>();
     ProgressBar progressBar;
-
-
+    private FirebaseUser user; //to check status
     public InventoryFragment() {
         // Required empty public constructor
     }
@@ -52,9 +53,36 @@ public class InventoryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_inventory, container, false);
-
         progressBar = view.findViewById(R.id.progressBar2);
-        progressBar.setVisibility(View.GONE);
+        container = view.findViewById(R.id.container);
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            progressBar.setVisibility(View.GONE);//not loading any drawings
+
+            //create a TextView
+            TextView noUserTextView = new TextView(getContext());
+            noUserTextView.setText("Please log in to view your drawings.");
+            noUserTextView.setTextSize(18);
+            noUserTextView.setTextColor(getResources().getColor(android.R.color.black)); // Customize text color
+            noUserTextView.setPadding(16, 16, 16, 16); // Optional padding
+
+            //create a Button for login page
+            Button loginButton = new Button(getContext());
+            loginButton.setText("Go to Login");
+            loginButton.setBackgroundResource(R.drawable.button_design); // Set the custom XML background
+            loginButton.setTextColor(getResources().getColor(android.R.color.white)); // Customize text color
+            loginButton.setPadding(16, 16, 16, 16); // Optional padding
+
+            //set a click listener on the button
+            loginButton.setOnClickListener(v -> {
+                Intent intent = new Intent(getContext(), LoginActivity.class); // Replace LoginActivity with your login activity
+                startActivity(intent);
+            });
+
+            // Add TextView and Button to the container
+            container.addView(noUserTextView);
+            container.addView(loginButton);
+        }
 
         Button myButton = view.findViewById(R.id.goToPage);
         myButton.setOnClickListener(v -> {
@@ -77,15 +105,12 @@ public class InventoryFragment extends Fragment {
     }
 
     private void fetchDrawings() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             //not logged in (no user)
             return;
         }
+        //query Firebase for the user's drawings
         String userId = user.getUid();
-        progressBar.setVisibility(View.VISIBLE);
-
-        // Query Firebase for the user's drawings
         FirebaseDatabase.getInstance().getReference()
                 .child("drawings")
                 .child(userId)
