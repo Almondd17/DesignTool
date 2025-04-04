@@ -222,12 +222,12 @@
         private String drawingMode;
         private Shape currentShape, selectedShape;
         private List<Shape> shapes;
-        private Stack<Shape> undoStack = new Stack<>();
         private Stack<Shape> redoStack = new Stack<>();
         private RectF toolbarRect;
         private boolean isToolbarVisible = false;
         private final int TOOLBAR_WIDTH = 150;
         private final int TOOLBAR_HEIGHT = 60;
+        private Bitmap loadedBitmap = null;//external bitmap to load
 
         public CanvasView(Context context) {
             super(context);
@@ -395,6 +395,14 @@
             }
         }
 
+        public void setBitmap(Bitmap newBitmap) {
+            this.loadedBitmap = newBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            this.bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+            this.bitmapCanvas = new Canvas(this.bitmap);
+            redrawBitmap();
+        }
+
+
         public void undo() {
             if (!shapes.isEmpty()) {
                 Shape lastShape = shapes.get(shapes.size() - 1);//get last shape
@@ -417,17 +425,15 @@
                 bitmap.eraseColor(Color.TRANSPARENT);//clear bitmap
                 bitmapCanvas.drawColor(Color.WHITE);//draw background
 
+                if (loadedBitmap != null) {//make sure to load the external drawing if there is
+                    bitmapCanvas.drawBitmap(loadedBitmap, 0, 0, null); // ✅ draw loaded image as base
+                }
+
                 //redraw all shapes onto the bitmap
                 for (Shape shape : shapes) {
                     shape.draw(bitmapCanvas);
                 }
                 invalidate();//refresh view
             }
-        }
-
-        public void loadBitmap(Bitmap bitmap) {
-            this.bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-            bitmapCanvas = new Canvas(this.bitmap);
-            invalidate(); // Refresh the view
         }
     }

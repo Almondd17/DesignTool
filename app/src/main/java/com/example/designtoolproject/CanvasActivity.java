@@ -3,6 +3,7 @@ package com.example.designtoolproject;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.Base64;
@@ -41,7 +42,6 @@ public class CanvasActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private ImageButton redoBtn, undoBtn;
-    private Toolbar toolbar;
     private FirebaseUser user;
 
     @Override
@@ -56,6 +56,17 @@ public class CanvasActivity extends AppCompatActivity {
         user = FirebaseAuth.getInstance().getCurrentUser();
         redoBtn = findViewById(R.id.redoButton);
         undoBtn = findViewById(R.id.undoButton);
+
+        //loading external drawing as a bitmap
+        String base64String = getIntent().getStringExtra("base64Bitmap");
+        Log.d("CanvasActivity", "Received base64: " + base64String);
+        canvasView.post(() -> {
+            if (base64String != null) {
+                byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+                Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                canvasView.setBitmap(decodedBitmap);
+            }
+        });
 
         optionMenu.setOnItemSelectedListener(item -> {
             Map<Integer, String> idModeMap = new HashMap<>();

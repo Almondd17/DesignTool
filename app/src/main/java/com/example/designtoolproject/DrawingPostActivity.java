@@ -96,7 +96,10 @@ public class DrawingPostActivity extends AppCompatActivity {
 
     private void editDrawing(String base64Image) {
         //figure out a way to send the user to canvas view to modify their drawing
-
+        Intent intent = new Intent(DrawingPostActivity.this, CanvasActivity.class);
+        intent.putExtra("base64Bitmap", base64Image);
+        startActivity(intent);
+        finish();
     }
 
     // Use the same decodeBase64 method from your adapter
