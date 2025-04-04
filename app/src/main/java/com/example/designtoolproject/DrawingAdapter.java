@@ -49,8 +49,9 @@ public class DrawingAdapter extends RecyclerView.Adapter<DrawingAdapter.DrawingV
 
         holder.itemView.setOnClickListener(v -> {
             //on item click (go to drawing post activity)
-            Toast.makeText(context, "clicked drawing: "+drawing.getName(), Toast.LENGTH_SHORT).show();
+            // Toast.makeText(context, "clicked drawing: "+drawing.getName(), Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(context, DrawingPostActivity.class);
+            intent.putExtra("id", drawing.getId());
             intent.putExtra("title", drawing.getName());
             intent.putExtra("image bitmap", base64String);
             context.startActivity(intent);

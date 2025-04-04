@@ -1,0 +1,16 @@
+{
+  "users": {
+    "user12345": {
+      "drawings": {
+        "drawing1": {
+          "name": "Sunset",
+          "url": "https://example.com/sunset.jpg"
+        },
+        "drawing2": {
+          "name": "Mountain",
+          "url": "https://example.com/mountain.jpg"
+        }
+      }
+    }
+  }
+}

@@ -9,11 +9,12 @@
 
     <TextView
         android:id="@+id/nameTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="170dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:background="@drawable/button_design"
         android:text="TextView"
+        android:textAlignment="center"
         android:textColor="#FFFFFF"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -37,5 +38,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/edit_icon_white"
         android:background="@drawable/button_design"/>
+
+    <ImageButton
+        android:id="@+id/deleteDrawingBtn"
+        android:layout_width="79dp"
+        android:layout_height="73dp"
+        android:background="#00FFFFFF"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/delete_icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
