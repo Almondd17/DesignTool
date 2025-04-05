@@ -12,7 +12,6 @@ firebaseAuth = "23.1.0"
 googleGmsGoogleServices = "4.4.2"
 preference = "1.2.1"
 glide = "4.12.0"
-
 [libraries]
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
