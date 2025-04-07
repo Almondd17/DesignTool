@@ -77,7 +77,6 @@
                 android:id="@+id/undoButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#00FFFFFF"
                 app:srcCompat="@drawable/undo_icon"
                 tools:layout_editor_absoluteX="146dp"
                 tools:layout_editor_absoluteY="655dp" />
@@ -86,7 +85,6 @@
                 android:id="@+id/redoButton"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:backgroundTint="#00FFFFFF"
                 app:srcCompat="@drawable/redo_icon"
                 tools:layout_editor_absoluteX="234dp"
                 tools:layout_editor_absoluteY="655dp" />

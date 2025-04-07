@@ -2,9 +2,11 @@ package com.example.designtoolproject;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.DisplayMetrics;
@@ -57,6 +59,53 @@ public class CanvasActivity extends AppCompatActivity {
         redoBtn = findViewById(R.id.redoButton);
         undoBtn = findViewById(R.id.undoButton);
 
+        //shared preference
+        SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
+        String defaultMode = prefs.getString("default_drawing_mode", "pencil");
+        String canvasColor = prefs.getString("canvas_color", "white");
+        //default drawing mode from sp
+        canvasView.setMode(defaultMode);
+        int selectedItemId;
+        switch (defaultMode) {
+            case "circle":
+                selectedItemId = R.id.circle;
+                break;
+            case "rectangle":
+                selectedItemId = R.id.rectangle;
+                break;
+            case "line":
+                selectedItemId = R.id.line;
+                break;
+            case "edit":
+                selectedItemId = R.id.editMode;
+                break;
+            case "pencil":
+            default:
+                selectedItemId = R.id.pencil;
+                break;
+        }
+        optionMenu.setSelectedItemId(selectedItemId);//visually select the sp item
+
+        //default canvas color from sp
+        int color = Color.WHITE; // default
+        switch (canvasColor) {
+            case "black":
+                color = Color.BLACK;
+                break;
+            case "gray":
+                color = Color.GRAY;
+                break;
+            case "white":
+        }
+        int finalColor = color;
+        if (canvasColor.equals("black")) {
+            redoBtn.setBackgroundColor(Color.WHITE);
+            undoBtn.setBackgroundColor(Color.WHITE);
+        } else {
+            redoBtn.setBackgroundColor(Color.TRANSPARENT);
+            undoBtn.setBackgroundColor(Color.TRANSPARENT);
+        }
+
         //loading external drawing as a bitmap
         String base64String = getIntent().getStringExtra("base64Bitmap");
         Log.d("CanvasActivity", "Received base64: " + base64String);
@@ -65,6 +114,10 @@ public class CanvasActivity extends AppCompatActivity {
                 byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
                 Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
                 canvasView.setBitmap(decodedBitmap);
+            }
+            else {//not loading external bitmap
+                Bitmap coloredBitmap = createColoredBitmap(canvasView.getWidth(), canvasView.getHeight(), finalColor);
+                canvasView.setBitmap(coloredBitmap);
             }
         });
 
@@ -128,6 +181,12 @@ public class CanvasActivity extends AppCompatActivity {
                 canvasView.redo();
             }
         });
+    }
+    private Bitmap createColoredBitmap(int width, int height, int color) {
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawColor(color);
+        return bitmap;
     }
 
     private void showNameInputDialog() {

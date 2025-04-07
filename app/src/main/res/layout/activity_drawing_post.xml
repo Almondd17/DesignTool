@@ -11,7 +11,7 @@
         android:id="@+id/nameTextView"
         android:layout_width="170dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="8dp"
         android:background="@drawable/button_design"
         android:text="TextView"
         android:textAlignment="center"
@@ -23,27 +23,31 @@
 
     <ImageView
         android:id="@+id/drawingImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/editDrawingButton"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/nameTextView"
         app:srcCompat="@android:drawable/screen_background_light" />
 
     <ImageButton
         android:id="@+id/editDrawingButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="78dp"
+        android:layout_height="73dp"
+        android:background="@drawable/button_design"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/edit_icon_white"
-        android:background="@drawable/button_design"/>
+        app:srcCompat="@drawable/edit_icon_white" />
 
     <ImageButton
         android:id="@+id/deleteDrawingBtn"
-        android:layout_width="79dp"
+        android:layout_width="wrap_content"
         android:layout_height="73dp"
-        android:background="#00FFFFFF"
+        android:background="@drawable/button_design"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/delete_icon" />

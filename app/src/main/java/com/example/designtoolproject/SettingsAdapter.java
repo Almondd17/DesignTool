@@ -51,7 +51,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         SettingItem item = settingsList.get(position);
         if (holder instanceof TitleViewHolder) {
             ((TitleViewHolder) holder).title.setText(item.getTitle());
-            holder.itemView.setBackgroundColor(Color.parseColor("#F5F5F5")); // Light Gray Background
+            holder.itemView.setBackgroundColor(Color.parseColor("#F5F5F5"));//light Gray Background
         } else if (holder instanceof SwitchViewHolder) {
             ((SwitchViewHolder) holder).title.setText(item.getTitle());
         } else if (holder instanceof NavigationViewHolder) {
