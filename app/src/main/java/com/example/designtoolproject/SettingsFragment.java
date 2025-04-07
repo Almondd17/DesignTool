@@ -73,20 +73,22 @@ public class SettingsFragment extends Fragment {
         adapter.setOnItemClickListener(new SettingsAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                if (settings.get(position).getTitle().equals("Sign out")) {
-                    showSignOutDialog();
-                }
-                else if (settings.get(position).getTitle().equals("Show Email")) {
-                    //show user email
-                }
-                else if (settings.get(position).getTitle().equals("Default Drawing Mode")) {
-                    showDrawingModeDialog();
-                }
-                else if (settings.get(position).getTitle().equals("Change Password")) {
-                   //change password
-                }
-                else if (settings.get(position).getTitle().equals("Canvas Color")) {
-                    showCanvasColorDialog();
+                switch (settings.get(position).getTitle()) {
+                    case "Sign Out":
+                        showSignOutDialog();
+                        break;
+                    case "Show Email":
+                        //show user email
+                        break;
+                    case "Default Drawing Mode":
+                        showDrawingModeDialog();
+                        break;
+                    case "Change Password":
+                        //change password
+                        break;
+                    case "Canvas Color":
+                        showCanvasColorDialog();
+                        break;
                 }
                 if (settings.get(position).getTitle().equals("Register now")) {
                     Intent intent = new Intent(getContext(), RegisterActivity.class);
