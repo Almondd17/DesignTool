@@ -22,6 +22,7 @@ import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -45,6 +46,20 @@ public class CanvasActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private ImageButton redoBtn, undoBtn;
     private FirebaseUser user;
+    private ConstraintLayout TopBarLayout;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        hideSystemUI();
+    }
+
+    private void hideSystemUI() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        );
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +73,7 @@ public class CanvasActivity extends AppCompatActivity {
         user = FirebaseAuth.getInstance().getCurrentUser();
         redoBtn = findViewById(R.id.redoButton);
         undoBtn = findViewById(R.id.undoButton);
+        TopBarLayout = findViewById(R.id.topBarLayout);
 
         //shared preference
         SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);

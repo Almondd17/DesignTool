@@ -34,7 +34,6 @@ android {
 
 dependencies {
     implementation(libs.glide)
-    annotationProcessor(libs.glideCompiler)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -46,4 +45,7 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation(libs.ambilwarna)
+    implementation(libs.okhttp)
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
 }
