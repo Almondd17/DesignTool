@@ -1,9 +1,13 @@
 package com.example.designtoolproject;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.util.Base64;
@@ -23,11 +27,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -41,6 +48,9 @@ public class HomeFragment extends Fragment {
     private ImageView image1, image2, image3, image4;
     private Button generateButton;
     private EditText editText;
+    private Bitmap generatedBitmap;
+    private String generatedImageUrl;
+
     public HomeFragment() {
         // Required empty public constructor
     }
@@ -84,9 +94,9 @@ public class HomeFragment extends Fragment {
         generateButton.postDelayed(() -> generateButton.setEnabled(true), 30000); // 30 sec cooldown
 
         OkHttpClient client = new OkHttpClient.Builder()//30 sec cooldown for the client
-                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
                 .build();
 
 
@@ -138,8 +148,27 @@ public class HomeFragment extends Fragment {
 
                     requireActivity().runOnUiThread(() -> {
                         Glide.with(requireContext())
+                                .asBitmap()
                                 .load(imageUrl)
-                                .into(image1); // You can use image2, 3, 4 later
+                                .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
+                                    @Override
+                                    public void onResourceReady(@NonNull Bitmap resource, @Nullable com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                                        image1.setImageBitmap(resource);
+                                        generatedBitmap = resource;
+                                    }
+
+                                    @Override
+                                    public void onLoadCleared(@Nullable android.graphics.drawable.Drawable placeholder) {
+                                        // Optional: Handle what to do when the image is cleared
+                                    }
+
+                                    @Override
+                                    public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                                        super.onLoadFailed(errorDrawable);
+                                        Toast.makeText(requireContext(), "Image failed to load", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
                     });
 
                 } catch (JSONException e) {
@@ -152,7 +181,7 @@ public class HomeFragment extends Fragment {
 
     private String getApiKey() {
         try {
-            java.util.Properties properties = new java.util.Properties();
+            Properties properties = new Properties();
             properties.load(requireContext().getAssets().open("keys.properties"));
             return properties.getProperty("openai.api.key");
         } catch (IOException e) {
@@ -165,6 +194,18 @@ public class HomeFragment extends Fragment {
     private void setClickListener(ImageView imageView, int i) {
         imageView.setOnClickListener(v -> {
             Toast.makeText(requireContext(), "Image " + i + " clicked", Toast.LENGTH_SHORT).show();
+            if (i == 1 && generatedBitmap != null) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                generatedBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                byte[] byteArray = baos.toByteArray();
+                String base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT);
+
+                Intent intent = new Intent(getContext(), CanvasActivity.class);
+                intent.putExtra("base64Bitmap", base64Image);
+                startActivity(intent);
+            } else {
+                Toast.makeText(requireContext(), "No image loaded yet", Toast.LENGTH_SHORT).show();
+            }
             // TODO: Replace image later with generated one
             // imageView.setImageBitmap(generatedBitmap);
         });

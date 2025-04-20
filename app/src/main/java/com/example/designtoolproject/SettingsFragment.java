@@ -85,6 +85,8 @@ public class SettingsFragment extends Fragment {
                         break;
                     case "Change Password":
                         //change password
+                        Intent intent = new Intent(getContext(), resetPasswordActivity.class);
+                        startActivity(intent);
                         break;
                     case "Canvas Color":
                         showCanvasColorDialog();
