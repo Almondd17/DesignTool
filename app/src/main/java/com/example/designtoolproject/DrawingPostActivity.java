@@ -6,24 +6,33 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class DrawingPostActivity extends AppCompatActivity {
     private TextView nameTextView;
     private ImageView imageView;
     private ImageButton editDrawingBtn, deleteDrawingBtn;
     FirebaseUser user;
+
+    private String base64Image = "";
+    private String drawingId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,18 +45,49 @@ public class DrawingPostActivity extends AppCompatActivity {
 
         nameTextView.bringToFront();
         // Get Data from Intent
+        drawingId = getIntent().getStringExtra("id");
         String title = getIntent().getStringExtra("title");
-        String base64Image = getIntent().getStringExtra("image bitmap");
+        //String base64Image = getIntent().getStringExtra("image bitmap");
 
         title  = title.substring(0, 1).toUpperCase() + title.substring(1);
         // Set title
         nameTextView.setText(title);
 
-        // Decode Base64 and display image
-        if (base64Image != null) {
-            Bitmap bitmap = decodeBase64(base64Image);
-            imageView.setImageBitmap(bitmap);
-        }
+        DatabaseReference drawingRef = FirebaseDatabase.getInstance()
+                .getReference()
+                .child("drawings")
+                .child(user.getUid())
+                .child(drawingId);
+
+        drawingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    base64Image = snapshot.child("data").getValue(String.class);
+                    if (base64Image != null && !base64Image.isEmpty()) {
+                        Bitmap bitmap = decodeBase64(base64Image);
+                        if (bitmap != null) {
+                            imageView.setImageBitmap(bitmap);
+
+                        } else {
+                            Toast.makeText(DrawingPostActivity.this, "Failed to decode drawing image", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(DrawingPostActivity.this, "Drawing data is empty", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(DrawingPostActivity.this, "Drawing not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("Firebase", "Error loading drawing: " + error.getMessage());
+                Toast.makeText(DrawingPostActivity.this, "Error loading drawing", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
         deleteDrawingBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -97,7 +137,7 @@ public class DrawingPostActivity extends AppCompatActivity {
     private void editDrawing(String base64Image) {
         //figure out a way to send the user to canvas view to modify their drawing
         Intent intent = new Intent(DrawingPostActivity.this, CanvasActivity.class);
-        intent.putExtra("base64Bitmap", base64Image);
+        intent.putExtra("drawingId", drawingId);
         startActivity(intent);
         finish();
     }

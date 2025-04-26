@@ -86,8 +86,12 @@ public class InventoryFragment extends Fragment {
 
         Button myButton = view.findViewById(R.id.goToPage);
         myButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), CanvasActivity.class);
-            startActivity(intent);
+            if (getActivity() != null) {
+                Intent intent = new Intent(getActivity(), CanvasActivity.class);
+                startActivity(intent);
+            } else {
+                Log.e("InventoryFragment", "Fragment is not attached to an activity.");
+            }
         });
 
         // Initialize RecyclerView

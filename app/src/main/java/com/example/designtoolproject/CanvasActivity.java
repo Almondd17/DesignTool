@@ -29,6 +29,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.ByteArrayOutputStream;
@@ -64,6 +65,7 @@ public class CanvasActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("CanvasActivity", "onCreate started"); // Add this
         setContentView(R.layout.activity_canvas_page);
         canvasView = findViewById(R.id.DrawView);
         optionMenu = findViewById(R.id.optionMenu);
@@ -123,19 +125,49 @@ public class CanvasActivity extends AppCompatActivity {
         }
 
         //loading external drawing as a bitmap
-        String base64String = getIntent().getStringExtra("base64Bitmap");
-        Log.d("CanvasActivity", "Received base64: " + base64String);
-        canvasView.post(() -> {
-            if (base64String != null) {
-                byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
-                Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                canvasView.setBitmap(decodedBitmap);
+        String externalDrawingId = getIntent().getStringExtra("drawingId");
+        Log.d("CanvasActivity", "Received id: " + externalDrawingId);
+
+        //only proceed if we actually have an external drawing ID
+        if (externalDrawingId != null && !externalDrawingId.isEmpty()) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                DatabaseReference drawingRef = FirebaseDatabase.getInstance().getReference()
+                        .child("drawings")
+                        .child(user.getUid())
+                        .child(externalDrawingId)
+                        .child("data"); // <- Only get the base64 "data" field
+
+                drawingRef.get().addOnSuccessListener(dataSnapshot -> {
+                    if (dataSnapshot.exists()) {
+                        String base64String = dataSnapshot.getValue(String.class);
+                        if (base64String != null && !base64String.isEmpty()) {
+                            byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+                            Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                            canvasView.setBitmap(decodedBitmap);
+                        } else {
+                            Log.e("CanvasActivity", "Base64 string is empty or null");
+                        }
+                    } else {
+                        Log.e("CanvasActivity", "Drawing not found in database");
+                    }
+                }).addOnFailureListener(e -> {
+                    Log.e("CanvasActivity", "Failed to load drawing: " + e.getMessage());
+                });
             }
-            else {//not loading external bitmap
-                Bitmap coloredBitmap = createColoredBitmap(canvasView.getWidth(), canvasView.getHeight(), finalColor);
-                canvasView.setBitmap(coloredBitmap);
-            }
-        });
+        }
+        else {
+            //wait for canvas view to be drew measured
+            canvasView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    canvasView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    Bitmap coloredBitmap = createColoredBitmap(canvasView.getWidth(), canvasView.getHeight(), finalColor);
+                    canvasView.setBitmap(coloredBitmap);
+                }
+            });
+        }
+
 
         optionMenu.setOnItemSelectedListener(item -> {
             Map<Integer, String> idModeMap = new HashMap<>();
@@ -198,6 +230,7 @@ public class CanvasActivity extends AppCompatActivity {
             }
         });
     }
+
     private Bitmap createColoredBitmap(int width, int height, int color) {
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);

@@ -53,7 +53,7 @@ public class DrawingAdapter extends RecyclerView.Adapter<DrawingAdapter.DrawingV
             Intent intent = new Intent(context, DrawingPostActivity.class);
             intent.putExtra("id", drawing.getId());
             intent.putExtra("title", drawing.getName());
-            intent.putExtra("image bitmap", base64String);
+//            intent.putExtra("image bitmap", base64String);
             context.startActivity(intent);
         });
     }

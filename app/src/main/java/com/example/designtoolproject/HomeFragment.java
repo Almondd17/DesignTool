@@ -21,6 +21,9 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,6 +36,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +55,7 @@ public class HomeFragment extends Fragment {
     private EditText editText;
     private Bitmap generatedBitmap;
     private String generatedImageUrl;
+    private String text;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -77,7 +83,7 @@ public class HomeFragment extends Fragment {
         generateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String text = editText.getText().toString();
+                text = editText.getText().toString();
                 generateNewImages(text);
             }
         });
@@ -193,22 +199,61 @@ public class HomeFragment extends Fragment {
 
     private void setClickListener(ImageView imageView, int i) {
         imageView.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "Image " + i + " clicked", Toast.LENGTH_SHORT).show();
             if (i == 1 && generatedBitmap != null) {
+                //scale bitmap and convert to base64
+                int canvasWidth = 1080;
+                int canvasHeight = 2125;
+                Bitmap scaledBitmap = scaleBitmapToFitCanvas(generatedBitmap, canvasWidth, canvasHeight);
+                //convert to base64
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                generatedBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                 byte[] byteArray = baos.toByteArray();
                 String base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                //save the generated image as a drawing
+                if (FirebaseAuth.getInstance().getCurrentUser() != null && base64Image != null) {
+                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    String drawingId = FirebaseDatabase.getInstance().getReference().child("drawings").child(userId).push().getKey();
+                    Map<String, Object> drawingData = new HashMap<>();
+                    drawingData.put("name", text);
+                    drawingData.put("timestamp", System.currentTimeMillis());
+                    drawingData.put("data", base64Image);
 
-                Intent intent = new Intent(getContext(), CanvasActivity.class);
-                intent.putExtra("base64Bitmap", base64Image);
-                startActivity(intent);
+                    FirebaseDatabase.getInstance().getReference()
+                            .child("drawings")
+                            .child(userId)
+                            .child(drawingId)
+                            .setValue(drawingData)
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getContext(), "generated image saved!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(getContext(), CanvasActivity.class);
+                                intent.putExtra("drawingId", drawingId);
+                                startActivity(intent);
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save drawing", Toast.LENGTH_SHORT).show());
+                }
             } else {
                 Toast.makeText(requireContext(), "No image loaded yet", Toast.LENGTH_SHORT).show();
             }
-            // TODO: Replace image later with generated one
-            // imageView.setImageBitmap(generatedBitmap);
         });
     }
-}
 
+    private Bitmap scaleBitmapToFitCanvas(Bitmap originalBitmap, int targetWidth, int targetHeight) {
+        //get the original width and height of the bitmap
+        int width = originalBitmap.getWidth();
+        int height = originalBitmap.getHeight();
+
+        //calculate the scaling factors
+        float widthScale = (float) targetWidth / width;
+        float heightScale = (float) targetHeight / height;
+
+        //use a smaller scale factor to ensure the image fits within the canvas
+        float scaleFactor = Math.min(widthScale, heightScale);
+
+        //calculate the new dimensions based on the scale factor
+        int scaledWidth = (int) (width * scaleFactor);
+        int scaledHeight = (int) (height * scaleFactor);
+
+        //return the scaled bitmap
+        return Bitmap.createScaledBitmap(originalBitmap, scaledWidth, scaledHeight, false);
+    }
+}
