@@ -8,7 +8,15 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/settingsRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp"/>
-    
+        android:layout_height="650dp"
+        android:padding="16dp" />
+
+    <TextView
+        android:id="@+id/emailTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        android:textAlignment="center"
+        android:textSize="20dp"/>
+
 </LinearLayout>

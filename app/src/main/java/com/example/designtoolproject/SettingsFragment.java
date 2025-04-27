@@ -35,6 +35,8 @@ public class SettingsFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
+    private boolean isChecked;
+    private TextView emailText;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -44,26 +46,30 @@ public class SettingsFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_settings, container, false);
         RecyclerView recyclerView = v.findViewById(R.id.settingsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        emailText = v.findViewById(R.id.emailTextView);
+        isChecked = false;
 
+        //init sp
+        SharedPreferences prefs = getContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
 
         List<SettingItem> settings = new ArrayList<>();
         //local settings
         settings.add(new SettingItem("App Settings", "", 0));
-        settings.add(new SettingItem("Dark Mode", "Enable dark mode", 1));
         settings.add(new SettingItem("Default Drawing Mode", "Change the default drawing mode for your art", 2));
-        settings.add(new SettingItem("Canvas Color", "Select your working canvas's color", 2));
+        settings.add(new SettingItem("Canvas Color", "Select your working canvas's color", 1));
 
         //user settings
         if (user != null) {
             settings.add(new SettingItem("Privacy Settings", "", 0));
-            settings.add(new SettingItem("Show Email", "display your email", 1));
-            settings.add(new SettingItem("Change Password", "Edit your display name", 2));
-            settings.add(new SettingItem("Sign Out", "log out of your user into login screen", 2));
+            settings.add(new SettingItem("Show Email", "display your email momentarily", 1));
+            settings.add(new SettingItem("Change Password", "Reset your user's password", 1));
+            settings.add(new SettingItem("Sign Out", "log out of your user into login screen", 1));
         }
 
         //not registered users
         else {
-            settings.add(new SettingItem("Register now", "go to register", 2));
+            settings.add(new SettingItem("Register now", "go to register", 1));
         }
 
         SettingsAdapter adapter = new SettingsAdapter(settings);
@@ -78,7 +84,15 @@ public class SettingsFragment extends Fragment {
                         showSignOutDialog();
                         break;
                     case "Show Email":
-                        //show user email
+                        //save the state of the switch via sp (default is false)
+                        isChecked = !isChecked;
+                        if (isChecked && user!=null) {
+                            emailText.setText("Your Email: "+user.getEmail());
+                            emailText.setVisibility(View.VISIBLE);
+                        }
+                        else {
+                            emailText.setVisibility(View.GONE);
+                        }
                         break;
                     case "Default Drawing Mode":
                         showDrawingModeDialog();

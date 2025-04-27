@@ -36,11 +36,16 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (viewType == 0) {
-            return new TitleViewHolder(inflater.inflate(android.R.layout.simple_list_item_1, parent, false));
-        }
-        else if (viewType == 1) {
-            return new SwitchViewHolder(inflater.inflate(R.layout.item_switch, parent, false));
-        }
+            View view = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+            TextView title = view.findViewById(android.R.id.text1);
+
+            // Set the top margin
+            ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) title.getLayoutParams();
+            layoutParams.topMargin = (int) (8 * parent.getContext().getResources().getDisplayMetrics().density); // Adjust the margin as needed
+            title.setLayoutParams(layoutParams);
+
+            return new TitleViewHolder(view);        }
+
         else {
             return new NavigationViewHolder(inflater.inflate(R.layout.item_navigation, parent, false));
         }
@@ -52,8 +57,6 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         if (holder instanceof TitleViewHolder) {
             ((TitleViewHolder) holder).title.setText(item.getTitle());
             holder.itemView.setBackgroundColor(Color.parseColor("#F5F5F5"));//light Gray Background
-        } else if (holder instanceof SwitchViewHolder) {
-            ((SwitchViewHolder) holder).title.setText(item.getTitle());
         } else if (holder instanceof NavigationViewHolder) {
             ((NavigationViewHolder) holder).title.setText(item.getTitle());
             ((NavigationViewHolder) holder).description.setText(item.getDescription());
@@ -77,16 +80,6 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         TitleViewHolder(View view) {
             super(view);
             title = view.findViewById(android.R.id.text1);
-        }
-    }
-
-    static class SwitchViewHolder extends RecyclerView.ViewHolder {
-        TextView title;
-        Switch switchButton;
-        SwitchViewHolder(View view) {
-            super(view);
-            title = view.findViewById(R.id.switchTitle);
-            switchButton = view.findViewById(R.id.switchToggle);
         }
     }
 
