@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -51,11 +52,13 @@ import okhttp3.Response;
 
 public class HomeFragment extends Fragment {
     private ImageView image1, image2, image3, image4;
-    private Button generateButton;
+    private Button generateButton, startDrawing;
     private EditText editText;
     private Bitmap generatedBitmap;
     private String generatedImageUrl;
     private String text;
+    private boolean isSaving = false;
+    private ProgressBar saveProgressBar;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -74,12 +77,21 @@ public class HomeFragment extends Fragment {
         image2 = v.findViewById(R.id.image2);
         image3 = v.findViewById(R.id.image3);
         image4 = v.findViewById(R.id.image4);
+        saveProgressBar = v.findViewById(R.id.saveProgressBar);
         editText = v.findViewById(R.id.imageTextInput);
         generateButton = v.findViewById(R.id.generateImagesBtn);
+        startDrawing = v.findViewById(R.id.startDrawing);
         setClickListener(image1, 1);
         setClickListener(image2, 2);
         setClickListener(image3, 3);
         setClickListener(image4, 4);
+        startDrawing.setOnClickListener(new View.OnClickListener() {//new drawing button
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), CanvasActivity.class);
+                startActivity(intent);
+            }
+        });
         generateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -200,16 +212,25 @@ public class HomeFragment extends Fragment {
     private void setClickListener(ImageView imageView, int i) {
         imageView.setOnClickListener(v -> {
             if (i == 1 && generatedBitmap != null) {
-                //scale bitmap and convert to base64
+                if (isSaving) {
+                    Toast.makeText(requireContext(), "Please wait, saving in progress...", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                isSaving = true;
+                imageView.setEnabled(false);
+                saveProgressBar.setVisibility(View.VISIBLE);
+
+                // Scale bitmap and convert to base64
                 int canvasWidth = 1080;
                 int canvasHeight = 2125;
                 Bitmap scaledBitmap = scaleBitmapToFitCanvas(generatedBitmap, canvasWidth, canvasHeight);
-                //convert to base64
+
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                 byte[] byteArray = baos.toByteArray();
                 String base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT);
-                //save the generated image as a drawing
+
                 if (FirebaseAuth.getInstance().getCurrentUser() != null && base64Image != null) {
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String drawingId = FirebaseDatabase.getInstance().getReference().child("drawings").child(userId).push().getKey();
@@ -224,12 +245,25 @@ public class HomeFragment extends Fragment {
                             .child(drawingId)
                             .setValue(drawingData)
                             .addOnSuccessListener(aVoid -> {
-                                Toast.makeText(getContext(), "generated image saved!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), "Generated image saved!", Toast.LENGTH_SHORT).show();
+                                isSaving = false;
+                                saveProgressBar.setVisibility(View.GONE);
+                                imageView.setEnabled(true);
+
                                 Intent intent = new Intent(getContext(), CanvasActivity.class);
                                 intent.putExtra("drawingId", drawingId);
                                 startActivity(intent);
                             })
-                            .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save drawing", Toast.LENGTH_SHORT).show());
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getContext(), "Failed to save drawing", Toast.LENGTH_SHORT).show();
+                                isSaving = false;
+                                saveProgressBar.setVisibility(View.GONE);
+                                imageView.setEnabled(true);
+                            });
+                } else {
+                    isSaving = false;
+                    saveProgressBar.setVisibility(View.GONE);
+                    imageView.setEnabled(true);
                 }
             } else {
                 Toast.makeText(requireContext(), "No image loaded yet", Toast.LENGTH_SHORT).show();

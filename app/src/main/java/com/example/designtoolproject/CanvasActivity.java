@@ -45,7 +45,7 @@ public class CanvasActivity extends AppCompatActivity {
     private ImageButton toggleButton;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
-    private ImageButton redoBtn, undoBtn;
+    private ImageButton redoBtn, undoBtn, homeButton;
     private FirebaseUser user;
     private ConstraintLayout TopBarLayout;
     @Override
@@ -76,6 +76,7 @@ public class CanvasActivity extends AppCompatActivity {
         redoBtn = findViewById(R.id.redoButton);
         undoBtn = findViewById(R.id.undoButton);
         TopBarLayout = findViewById(R.id.topBarLayout);
+        homeButton = findViewById(R.id.homeButton);
 
         //shared preference
         SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
@@ -168,6 +169,13 @@ public class CanvasActivity extends AppCompatActivity {
             });
         }
 
+        homeButton.setOnClickListener(new View.OnClickListener() {//home page go back button
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(CanvasActivity.this, HomePage.class);
+                startActivity(intent);
+            }
+        });
 
         optionMenu.setOnItemSelectedListener(item -> {
             Map<Integer, String> idModeMap = new HashMap<>();

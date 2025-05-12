@@ -62,7 +62,6 @@ public class SettingsFragment extends Fragment {
         //user settings
         if (user != null) {
             settings.add(new SettingItem("Privacy Settings", "", 0));
-            settings.add(new SettingItem("Show Email", "display your email momentarily", 1));
             settings.add(new SettingItem("Change Password", "Reset your user's password", 1));
             settings.add(new SettingItem("Sign Out", "log out of your user into login screen", 1));
         }
@@ -82,17 +81,6 @@ public class SettingsFragment extends Fragment {
                 switch (settings.get(position).getTitle()) {
                     case "Sign Out":
                         showSignOutDialog();
-                        break;
-                    case "Show Email":
-                        //save the state of the switch via sp (default is false)
-                        isChecked = !isChecked;
-                        if (isChecked && user!=null) {
-                            emailText.setText("Your Email: "+user.getEmail());
-                            emailText.setVisibility(View.VISIBLE);
-                        }
-                        else {
-                            emailText.setVisibility(View.GONE);
-                        }
                         break;
                     case "Default Drawing Mode":
                         showDrawingModeDialog();
